@@ -4,6 +4,7 @@ import Sequelize from "sequelize";
 import User from "./user.model.js";
 import Role from "./role.model.js";
 
+
 const db = {};
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
