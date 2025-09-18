@@ -1,22 +1,16 @@
 import { DataTypes } from "sequelize";
+import bcrypt from "bcryptjs";
 import sequelize from "./db.js";
-import becrypt from "bcryptjs";
+
 const User = sequelize.define(
   "user",
   {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
+      autoIncrement: true,
     },
     name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    password: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-    type: {
       type: DataTypes.STRING,
       allowNull: false,
     },
@@ -28,19 +22,42 @@ const User = sequelize.define(
         isEmail: true,
       },
     },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    type: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    isVerified: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      allowNull: false,
+    },
+    //Teacher Attribute
+    school: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    phone: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
   },
   {
-    hook: {
+    freezeTableName: true,
+    hooks: {
       beforeCreate: async (user) => {
         if (user.password) {
-          const salt = await becrypt.genSalt(10);
-          user.password = await becrypt.hash(user.password, salt);
+          const salt = await bcrypt.genSalt(10);
+          user.password = await bcrypt.hash(user.password, salt);
         }
       },
       beforeUpdate: async (user) => {
-        if (user.password) {
-          const salt = await becrypt.genSalt(10);
-          user.password = await becrypt.hash(user.password, salt);
+        if (user.changed("password")) {
+          const salt = await bcrypt.genSalt(10);
+          user.password = await bcrypt.hash(user.password, salt);
         }
       },
     },
@@ -48,7 +65,7 @@ const User = sequelize.define(
 );
 
 User.prototype.comparePassword = async function (candidatePassword) {
-  return await becrypt.compare(candidatePassword, this.password);
+  return await bcrypt.compare(candidatePassword, this.password);
 };
 
 User.sync({ force: false })

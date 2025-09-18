@@ -2,9 +2,15 @@ import { DataTypes } from "sequelize";
 import sequelize from "./db.js";
 
 const Activity = sequelize.define("activity", {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
   name: {
     type: DataTypes.STRING,
     allowNull: false,
+    trim: true,
   },
   description: {
     type: DataTypes.STRING,
@@ -21,20 +27,21 @@ const Activity = sequelize.define("activity", {
   team_size: {
     type: DataTypes.INTEGER,
     allowNull: false,
+    min: 1,
   },
   date: {
     type: DataTypes.DATE,
-    allowNull: false,
+    required: true,
   },
   location: {
     type: DataTypes.STRING,
     allowNull: false,
   },
-  req_open: {
+  reg_open: {
     type: DataTypes.DATE,
     allowNull: false,
   },
-  req_close: {
+  reg_close: {
     type: DataTypes.DATE,
     allowNull: false,
   },
@@ -49,27 +56,31 @@ const Activity = sequelize.define("activity", {
   contact_email: {
     type: DataTypes.STRING,
     allowNull: false,
+    match: [
+      /^\w+([\.-]?\w+)*@\w([\.]?\w+)*(\.\w{2,3})+$/,
+      "Please enter a valid email",
+    ],
   },
   status: {
-    type: DataTypes.STRING,
-    allowNull: false,
+    type: DataTypes.ENUM("draft", "open", "closed", "in_progress", "completed"),
+    default: "draft",
   },
   created_at: {
     type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
+    default: Date.now,
   },
+
   updated_at: {
     type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
+    default: Date.now,
   },
 });
 
-Activity.sync({ force: true })
+Activity.sync({ force: false })
   .then(() => {
     console.log("Table created or already exists");
   })
   .catch((error) => {
-    console.log("Error creating table", error);
+    console.log("Error created table", error);
   });
-
 export default Activity;

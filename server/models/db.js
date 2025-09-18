@@ -1,5 +1,6 @@
 import { Sequelize } from "sequelize";
 import dbConfig from "../config/db.config.js";
+
 const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   host: dbConfig.HOST,
   port: dbConfig.PORT,
@@ -7,7 +8,7 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
   logging: false,
   // dialectOptions: {
   //   ssl: {
-  //     required: true,
+  //     require: true,
   //     rejectUnauthorized: false,
   //   },
   // },
@@ -16,7 +17,7 @@ const sequelize = new Sequelize(dbConfig.DB, dbConfig.USER, dbConfig.PASSWORD, {
 const testConnection = async () => {
   try {
     await sequelize.authenticate();
-    console.log("Connection has been etablished succesfully");
+    console.log("Connection has been etablished successfully");
   } catch (error) {
     console.log("Unable to connect to the database", error);
   }

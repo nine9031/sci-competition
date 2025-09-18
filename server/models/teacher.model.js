@@ -1,29 +1,31 @@
-import { Datatype } from "sequelize";
-import User from "./user.model";
+import User from "./user.model.js";
+import { DataTypes } from "sequelize";
 
 const Teacher = User.init(
   {
     school: {
-      type: Datatype.STRING,
+      type: DataTypes.STRING,
       allowNull: false,
     },
     phone: {
       type: DataTypes.STRING,
       allowNull: false,
     },
+    type: {
+      type: DataTypes.STRING,
+      defaultValue: "teacher",
+    },
   },
   {
     scopes: {
       defaultScope: {
-        where: {
-          type: "teacher",
-        },
+        where: { type: "teacher" },
       },
     },
-  },
-  {
-    beforeCreate: (teacher) => {
-      teacher.type = "teacher";
+    hooks: {
+      beforeCreate: (teacher) => {
+        teacher.type = "teacher";
+      },
     },
   }
 );

@@ -6,12 +6,14 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./server:/app
-      - /app/node_modules
+      - "./server:/app"
+      - "/app/node_modules"
+
     command: nodemon --legacy-watch index
     restart: always
+
     environment:
-      - DATABASE_URL=postgres://postgres:postgres@db:5432/app_db
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/app_db
       - HOST=db
       - USER=postgres
       - PASSWORD=postgres
@@ -27,8 +29,8 @@ services:
     ports:
       - "5173:5173"
     volumes:
-      - ./client:/app
-      - /app/node_modules
+      - "./client:/app"
+      - "/app/node_modules"
     environment:
       - CHOKIDAR_USEPOLLING=true
     depends_on:

@@ -1,84 +1,141 @@
-import jwt from "jsonwebtoken";
-import authConfig from "../config/auth.config.js";
 import db from "../models/index.js";
-import cryto from "crypto";
-
+import authConfig from "../config/auth.config.js";
+import jwt from "jsonwebtoken";
 const User = db.User;
+import crypto from "crypto";
+import { sendVerificationEmail } from "../utils/email.js";
 
 //Register
 const signUp = async (req, res) => {
   const { email, password, type, name, school, phone } = req.body;
   try {
+    //Validate request
     if (!email || !password || !type || !name) {
       return res
         .status(400)
-        .send({ message: "Email, Password, Type and Name are required!" });
+        .send({ message: "Email , Password , Type and Name are required !" });
     }
-
-    const allowedType = ["admin", "teacher", "judge"];
-    if (!allowedType.includes(type)) {
+    //Validate user type
+    const allowedTypes = ["admin", "teacher", "judge"];
+    if (!allowedTypes.includes(type)) {
       return res.status(400).send({
-        message: "Invalid user type. Must be admin, teacher or judge",
+        message: "Invalid user Type. Must be admin, teacher or judge !",
       });
     }
-
     if (type === "teacher" && (!school || !phone)) {
       return res
         .status(400)
-        .send({ message: "school and phone are required for teacher!" });
+        .send({ message: "School and Phone are required for teacher!" });
     }
-
+    //check if user already exists
     const existingUser = await User.findOne({
       where: {
         email: email,
       },
     });
     if (existingUser) {
-      return res.status(400).send({ message: "Email already in user!" });
+      return res.status(400).send({ message: "Email already in use!" });
     }
 
-    //
+    //Create user object base on type
     const userData = {
       name: name,
       email: email,
       password: password,
       type: type,
+      isVerified: false,
     };
-    if (type === "teachar") {
+    if (type === "teacher") {
       userData.school = school;
-      userData.password = password;
+      userData.phone = phone;
     }
 
-    //
+    //Create new user
     const user = await User.create(userData);
 
+    //If user is a teacher, create and send verification email
     if (type === "teacher") {
       try {
-        const token = cryto.randomBytes(32).toString("hex");
-        const verification = await db.VerificationToken.create({
+        const token = crypto.randomBytes(32).toString("hex");
+        const verification = await db.verificationToken.create({
           token,
           userId: user.id,
-          expiredAt: new Date(DataTransfer.now() + 24 * 60 * 60 * 1000),
+          expiredAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
         });
-      } catch (error) {}
+        console.log("Verification Token Created", verification);
+
+        //TODO Send Verification Email
+        await sendVerificationEmail(user.email, token, user.name);
+        console.log("Verification Email Sent Successfully!");
+      } catch (error) {
+        console.error("Error Sending Verification Email", error);
+      }
     }
 
     res.status(201).send({
       message:
         user.type === "teacher"
-          ? "resgistertion Successfully! Please Check Your Email To Verify Your Accont"
-          : "User Resgistered Successfully!",
+          ? "Registration successfully! please check your email to verify your account"
+          : "User registered successfully!",
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         type: user.type,
-        ...(user.type === "teachar" && { isVerified: user.isVerified }),
+        ...(user.type === "teacher" && { isVerified: user.isVerified }),
       },
     });
   } catch (error) {
     return res.status(500).send({
-      message: error.message || "Some error ocurred while creating the user",
+      message: error.message || "Some error occurred while creating the user",
     });
   }
 };
+
+const verifyEmail = async (req, res) => {
+  const { token } = req.params;
+  if (!token) {
+    return res.status(400).send({ message: "token undefined!" });
+  }
+
+  try {
+    const verificationToken = await db.verificationToken.findOne({
+      where: { token },
+    });
+    if (!verificationToken) {
+      return res.status(404).send({
+        message: "Invalid Verification token!",
+      });
+    }
+    //Check if Token is Expired
+    if (new Date() > verificationToken.expiredAt) {
+      await verificationToken.destroy();
+      return res
+        .status(400)
+        .send({ message: "Verification Token has expired!" });
+    }
+    const user = await User.findByPk(verificationToken.userId);
+    if (!user) {
+      return res.status(404)({ message: "User not found" });
+    }
+    //
+    await user.update({ isVerified: true });
+    await verificationToken.destroy();
+    //return web view
+    const htmlPath = path.join(
+      process.cwd(),
+      "views",
+      "verification-success.html"
+    );
+    res.sendfile(htmlPath);
+  } catch (error) {
+    return res.status(500).send({
+      message: error.message || "Some error occurred while verifying the user",
+    });
+  }
+};
+const authController = {
+  signUp,
+};
+
+export default authController;

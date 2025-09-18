@@ -1,31 +1,49 @@
-import activityController from "../controllers/activity.controller.js";
 import express from "express";
-import AuthMiddleware from "../middleware/authJwt.js";
-
 const router = express.Router();
-//POST http://localhost:5000/api/v1/activities
+import activityController from "../controllers/activity.controller.js";
+import authJwt from "../middleware/authJwt.js";
+
+// POST: สร้างกิจกรรม (admin, manager)
 router.post(
   "/",
-  [AuthMiddleware.verifyToken, AuthMiddleware.isManager],
+  authJwt.verifyToken,
+  authJwt.isManager,
   activityController.create
 );
-//GET http://localhost:5000/api/v1/activities
-router.get("/", activityController.findAll);
-//GET http://localhost:5000/api/v1/activities/1
-router.get("/:id", activityController.findById);
-//PUT http://localhost:5000/api/v1/activities/1
+// GET: ดูกิจกรรมทั้งหมด (admin, manager)
+router.get(
+  "/",
+  authJwt.verifyToken,
+  authJwt.isManager,
+  activityController.getAll
+);
+// GET: ดูกิจกรรมตาม id (admin, manager)
+router.get(
+  "/:id",
+  authJwt.verifyToken,
+  authJwt.isManager,
+  activityController.getById
+);
+// PUT: แก้ไขกิจกรรม (admin, manager)
 router.put(
   "/:id",
-  [AuthMiddleware.verifyToken, AuthMiddleware.isManager],
-  activityController.updateById
+  authJwt.verifyToken,
+  authJwt.isManager,
+  activityController.update
 );
-//DELETE http://localhost:5000/api/v1/activities/1
+// DELETE: ลบกิจกรรม (admin เท่านั้น)
 router.delete(
   "/:id",
-  [AuthMiddleware.verifyToken, AuthMiddleware.isManager],
-  activityController.deleteById
+  authJwt.verifyToken,
+  authJwt.isAdmin,
+  activityController.delete
 );
-//GET http://localhost:5000/api/v1/activities/search?name=abc&type=def&level=ghi&status=jkl
-router.get("/search", activityController.searchActivity);
+// GET: ค้นหากิจกรรม (admin, manager)
+router.get(
+  "/search",
+  authJwt.verifyToken,
+  authJwt.isManager,
+  activityController.searchActivity
+);
 
 export default router;
