@@ -21,10 +21,6 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (req, res) => {
-  res.send("ban");
-});
-
 const initDatabase = async () => {
   try {
     await db.sequelize.authenticate();

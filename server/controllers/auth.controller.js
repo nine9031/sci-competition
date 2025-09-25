@@ -3,6 +3,7 @@ import authConfig from "../config/auth.config.js";
 import jwt from "jsonwebtoken";
 const User = db.User;
 import crypto from "crypto";
+import path from "path";
 import { sendVerificationEmail } from "../utils/email.js";
 
 //Register
@@ -95,7 +96,7 @@ const signUp = async (req, res) => {
 const verifyEmail = async (req, res) => {
   const { token } = req.params;
   if (!token) {
-    return res.status(400).send({ message: "token undefined!" });
+    return res.status(400).send({ message: "Token undefined!" });
   }
 
   try {
@@ -104,7 +105,7 @@ const verifyEmail = async (req, res) => {
     });
     if (!verificationToken) {
       return res.status(404).send({
-        message: "Invalid Verification token!",
+        message: "Invalid Verification Token!",
       });
     }
     //Check if Token is Expired
@@ -118,7 +119,7 @@ const verifyEmail = async (req, res) => {
     if (!user) {
       return res.status(404)({ message: "User not found" });
     }
-    //
+    //Change verify status
     await user.update({ isVerified: true });
     await verificationToken.destroy();
     //return web view
@@ -127,7 +128,7 @@ const verifyEmail = async (req, res) => {
       "views",
       "verification-success.html"
     );
-    res.sendfile(htmlPath);
+    res.sendFile(htmlPath);
   } catch (error) {
     return res.status(500).send({
       message: error.message || "Some error occurred while verifying the user",
@@ -136,6 +137,7 @@ const verifyEmail = async (req, res) => {
 };
 const authController = {
   signUp,
+  verifyEmail,
 };
 
 export default authController;
